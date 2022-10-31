@@ -1,0 +1,6 @@
+*/.ssh/*
+*/.terraform/*
+.terraform.lock.hcl
+authorized_key.json
+id_rsa.pub
+versions.tf
