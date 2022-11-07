@@ -1,0 +1,2 @@
+helm upgrade pr-gr prometheus-community/kube-prometheus-stack -n monitoring-stack -f helm-val/monitoring.yaml --install
+helm upgrade pr-gr prometheus-community/kube-prometheus-stack -n monitoring-stack -f helm-val/monitoring.yaml --install

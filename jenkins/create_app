@@ -1,0 +1,45 @@
+node {
+    def app
+    
+    stage('Clone repository') {
+        /* Let's make sure we have the repository cloned to our workspace */
+
+        checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/kocmoc1/simple-go-webapp']]])
+    }
+    stage('Get tag') {
+        /* Let's make sure we have the repository cloned to our workspace */
+        gitTag = sh(returnStdout: true, script: "git tag --sort version:refname | tail -1").trim()
+            if (gitTag == '') {
+                gitTag = "0.0.${currentBuild.number}"
+            } 
+        echo "Build number is ${currentBuild.number}"
+        echo gitTag
+        env.IMAGE_TAG = gitTag
+    }
+    stage('Build image') {
+        app = docker.build("kocmoc1/sgw")
+    }
+
+
+    stage('Push image') {
+
+        docker.withRegistry('https://registry.hub.docker.com/v1/repositories', 'e49e94ea-6cf5-41ee-9391-88c5be217e58') {
+            app.push("${gitTag}")
+
+        }
+    stage('Set tag to deployment') {
+       echo gitTag
+       sh 'echo "${gitTag}"'
+       sh 'env | grep IMAGE_TAG'
+       sh 'sed -ie "s/SGW_TAG/1.0.2/g" sgw.yaml'
+    }
+
+    stage('Apply deployment') {
+          withKubeConfig([credentialsId: 'k8s-config',
+                    namespace: 'sgw']) {
+      sh( 'kubectl apply -f sgw.yaml && kubectl get pod -n sgw'  )
+    }  
+       
+    }
+    }
+}

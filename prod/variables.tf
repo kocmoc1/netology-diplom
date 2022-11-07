@@ -1,8 +1,8 @@
 variable "cloud_id" {
-    default = "SOME CLOUD"
+    default = "b1gqrkd2qqgkhqp9nqob"
 }
 variable "folder_id" {
-    default = "SOME ID"
+    default = "b1gc06k8de2dk9pgv3i5"
 }
 variable "yc_zone" {
     default = "ru-central1-b"
