@@ -37,7 +37,7 @@ node {
     stage('Apply deployment') {
           withKubeConfig([credentialsId: 'k8s-config',
                     namespace: 'sgw']) {
-      sh( 'kubectl apply -f sgw.yaml && kubectl get pod -n sgw'  )
+      sh( 'kubectl apply -f k8s-deploys/sgw.yaml && kubectl get pod -n sgw'  )
     }  
        
     }
