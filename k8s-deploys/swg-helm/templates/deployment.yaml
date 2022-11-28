@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sgw.fullname" . }}
+  labels:
+    {{- include "sgw.labels" . | nindent 4 }}
+spec:
+  {{- include "sgw.replicas" . | nindent 2 }}
+  selector:
+    matchLabels:
+      {{- include "sgw.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "sgw.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.containerPort }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: {{ .Values.containerPort }}
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: {{ .Values.containerPort }}
+          {{- if .Values.env }}
+          env:
+            {{ .Values.env }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            {{- if .Values.pvc.enabled }}
+            - mountPath: {{ .Values.pvc.mountPath }}
+              name: {{ include "sgw.fullname" . }}
+            {{- end }}
+            {{- if .Values.configMap.enabled }}
+            {{- range $path, $config := .Values.configMap.data }}
+            - name: {{ include "sgw.fullname" $ }}-configmap
+              mountPath: {{ $.Values.configMap.mountPath }}{{ $path }}
+              subPath: {{ $path }}
+            {{- end -}}
+            {{- end }}
+      volumes:
+        {{- if .Values.pvc.enabled }}
+        - name: {{ include "sgw.fullname" . }}
+          persistentVolumeClaim:
+            claimName: {{ include "sgw.fullname" . }}
+        {{- end }}
+        {{- if .Values.configMap.enabled }}
+        - name: {{ include "sgw.fullname" . }}-configmap
+          configMap:
+            name: {{ include "sgw.fullname" . }}
+        {{- end }}

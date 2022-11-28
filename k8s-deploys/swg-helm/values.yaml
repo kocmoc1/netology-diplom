@@ -1,0 +1,52 @@
+replicaCount: 1
+
+image:
+  repository: kocmoc1/sgw
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+containerPort: 8080
+
+env: {}
+  # - name: SomeKey
+  #   value: SomeValue
+
+envPlain: {}
+  # SomeKey: SomeValue
+
+service:
+  type: ClusterIP
+  port: 80
+
+pvc:
+  enabled: false
+
+configMap:
+  enabled: false
+
+ingress:
+  enabled: true
+  spec:
+    ingressClassName: nginx
+    rules:
+    - host: sgw.cluster.local
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: simple-go-web-app-service
+              port:
+                number: 8080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
